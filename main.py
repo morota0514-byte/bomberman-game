@@ -226,7 +226,7 @@ class App:
         pyxel.init(200, 200, title="情報ボンバーマン")
         self.scene = "SELECT" 
         self.mode = "easy"
-        self.help_page = 1 # 💡 説明画面用のページ番号管理（1〜2）
+        self.help_page = 1
         pyxel.run(self.update, self.draw)
 
     def init_game(self):
@@ -258,13 +258,11 @@ class App:
             elif pyxel.btnp(pyxel.KEY_3):
                 self.mode = "hard"; self.scene = "READY"; self.init_game()
             elif pyxel.btnp(pyxel.KEY_4):
-                # 💡 4のキーで説明画面へ移動
                 self.scene = "HELP"
                 self.help_page = 1
             return
 
         elif self.scene == "HELP":
-            # 💡 左右の矢印キーでページ移動、Enterキーで戻る
             if pyxel.btnp(pyxel.KEY_LEFT):
                 self.help_page = max(1, self.help_page - 1)
             elif pyxel.btnp(pyxel.KEY_RIGHT):
@@ -302,7 +300,6 @@ class App:
 
         min_rate, max_rate = (1.0, 2.0) if self.mode == "easy" else (2.0, 3.0)
 
-        # 通常爆弾（5秒ごと）
         if self.spawn_timer >= 150:
             self.spawn_timer = 0
             num_bombs = random.randint(7, 10)
@@ -310,13 +307,11 @@ class App:
                 all_existing = self.bombs + self.cross_bombs + self.speed_items
                 self.bombs.append(Bomb(self.player.x, self.player.y, all_existing, min_rate, max_rate))
 
-        # 十字爆弾（10秒ごと、Hardのみ）
         if self.mode == "hard" and self.cross_spawn_timer >= 300:
             self.cross_spawn_timer = 0
             all_existing = self.bombs + self.cross_bombs + self.speed_items
             self.cross_bombs.append(CrossBomb(self.player.x, self.player.y, all_existing))
 
-        # 4隅爆弾の生成（10秒に1回、ランダムな2隅から出現、性能は通常爆弾と統一）
         if self.corner_spawn_timer >= 300:
             self.corner_spawn_timer = 0
             corners = [(0, 0), (200, 0), (0, 200), (200, 200)]
@@ -325,21 +320,16 @@ class App:
                 all_existing = self.bombs + self.cross_bombs + self.speed_items
                 self.bombs.append(Bomb(self.player.x, self.player.y, all_existing, min_rate, max_rate, start_pos=pos))
 
-        # 加速アイテムの生成（15秒に1回）
         if self.fast_spawn_timer >= 450:
             self.fast_spawn_timer = 0
             all_existing = self.bombs + self.cross_bombs + self.speed_items
             self.speed_items.append(SpeedItem("fast", self.player.x, self.player.y, all_existing))
 
-        # 減速アイテムの生成（15秒に1回）
         if self.slow_spawn_timer >= 450:
             self.slow_spawn_timer = 0
             all_existing = self.bombs + self.cross_bombs + self.speed_items
             self.speed_items.append(SpeedItem("slow", self.player.x, self.player.y, all_existing))
 
-        # --- 各種オブジェクトの衝突・更新ループ ---
-
-        # 爆弾
         for b in self.bombs[:]:
             b.update()
             if b.check_hit(self.player.x, self.player.y, self.player.w, self.player.h):
@@ -351,7 +341,6 @@ class App:
                 self.score += 1
                 self.bombs.remove(b)
 
-        # 十字爆弾
         for cb in self.cross_bombs[:]:
             cb.update()
             if cb.check_hit(self.player.x, self.player.y, self.player.w, self.player.h):
@@ -363,7 +352,6 @@ class App:
                 self.score += 1
                 self.cross_bombs.remove(cb)
 
-        # 速度変更アイテム
         for si in self.speed_items[:]:
             si.update()
             if si.check_hit(self.player.x, self.player.y, self.player.w, self.player.h):
@@ -376,7 +364,6 @@ class App:
                 self.score += 1
                 self.speed_items.remove(si)
 
-        # 回復アイテム（30秒ごと、サイズを倍に変更）
         if self.item_spawn_timer >= 900:
             self.item_spawn_timer = 0
             self.item_active = True
@@ -407,11 +394,10 @@ class App:
             pyxel.text(55, 70, "1 : EASY", 1)
             pyxel.text(55, 90, "2 : NORMAL", 2)
             pyxel.text(55, 110, "3 : HARD", 8)
-            pyxel.text(55, 140, "4 : HOW TO PLAY", 4) # 💡 ガイドを追加
+            pyxel.text(55, 140, "4 : HOW TO PLAY", 4)
             return
 
         elif self.scene == "HELP":
-            # 💡 説明画面の描画処理
             pyxel.text(10, 10, f"--- HOW TO PLAY ({self.help_page}/2) ---", 0)
             
             if self.help_page == 1:
@@ -433,28 +419,22 @@ class App:
             elif self.help_page == 2:
                 pyxel.text(10, 30, "[OBJECT DIRECTORY]", 8)
                 
-                # 通常爆弾
                 pyxel.circ(17, 47, 3, 8)
                 pyxel.text(27, 45, "GRAY->RED : NORMAL BOMB (-1 LIFE)", 0)
                 
-                # 十字爆弾
                 pyxel.rect(14, 62, 6, 6, 9)
                 pyxel.text(27, 62, "ORANGE    : CROSS BOMB  (-2 LIFE)", 9)
                 
-                # 加速アイテム
                 pyxel.rect(14, 80, 6, 6, 11)
                 pyxel.text(27, 80, "GREEN SQ  : SPEED UP ITEM", 11)
                 
-                # 減速アイテム
                 pyxel.rect(14, 98, 6, 6, 4)
                 pyxel.text(27, 98, "NAVY SQ   : SPEED DOWN ITEM", 4)
                 
-                # 回復アイテム
                 pyxel.rect(12, 113, 10, 10, 14)
                 pyxel.text(27, 116, "PINK SQ   : RECOVERY (+1 LIFE)", 14)
                 pyxel.text(27, 126, "            *PRESS ENTER ON IT", 0)
 
-            # 下部ナビゲーション
             pyxel.text(15, 170, "LEFT/RIGHT : CHANGE PAGE", 1)
             pyxel.text(15, 182, "PRESS ENTER : RETURN TO MENU", 2)
             return
@@ -493,7 +473,3 @@ def main():
     App()
 
 main()
-
-
-
-
