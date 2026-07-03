@@ -489,8 +489,10 @@ class App:
             text_color = 11 if self.player.speed_state == "fast" else 4
             pyxel.text(80, 5, status_text, text_color)
 
-
 def main():
     App()
 
 main()
+
+
+
